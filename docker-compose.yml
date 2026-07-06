@@ -1,0 +1,74 @@
+services:
+  vufind-web:
+    build:
+      context: .
+      dockerfile: docker/vufind/Dockerfile
+    container_name: ${COMPOSE_PROJECT_NAME:-vufind}-web
+    depends_on:
+      vufind-db:
+        condition: service_healthy
+    environment:
+      VUFIND_HOME: /usr/local/vufind
+      VUFIND_LOCAL_DIR: /usr/local/vufind/local/docker
+      VUFIND_BASEPATH: /
+      VUFIND_SITE_URL: ${VUFIND_SITE_URL:-http://localhost:8080}
+      VUFIND_THEME: ${VUFIND_THEME:-bootstrap5}
+      VUFIND_LOCAL_MODULES: ${VUFIND_LOCAL_MODULES:-Oasisbr}
+      VUFIND_NOILS_MODE: ${VUFIND_NOILS_MODE:-ils-none}
+      VUFIND_ENV: ${VUFIND_ENV:-production}
+      VUFIND_SYSTEM_DEBUG: ${VUFIND_SYSTEM_DEBUG:-false}
+      VUFIND_PHP_DISPLAY_ERRORS: ${VUFIND_PHP_DISPLAY_ERRORS:-0}
+      VUFIND_PHP_DISPLAY_STARTUP_ERRORS: ${VUFIND_PHP_DISPLAY_STARTUP_ERRORS:-0}
+      VUFIND_PHP_ERROR_REPORTING: ${VUFIND_PHP_ERROR_REPORTING:-E_ALL}
+      VUFIND_PHP_HTML_ERRORS: ${VUFIND_PHP_HTML_ERRORS:-0}
+      VUFIND_DB_HOST: vufind-db
+      VUFIND_DB_PORT: 3306
+      VUFIND_DB_NAME: ${VUFIND_DB_NAME:-vufind}
+      VUFIND_DB_USER: ${VUFIND_DB_USER:-vufind}
+      VUFIND_DB_PASSWORD: ${VUFIND_DB_PASSWORD:-vufind}
+      VUFIND_DB_ROOT_USER: root
+      VUFIND_DB_ROOT_PASSWORD: ${VUFIND_DB_ROOT_PASSWORD:-root}
+      VUFIND_SOLR_URL: ${SOLR_EXTERNAL_URL:-}
+    ports:
+      - "${VUFIND_WEB_PORT:-8080}:80"
+    volumes:
+      - ./vufind:/usr/local/vufind
+      - ./volume/config:/usr/local/vufind/local/docker/config
+      - ./volume/cache:/usr/local/vufind/local/docker/cache
+      - ./volume/log:/usr/local/vufind/local/docker/logs
+      - ./volume/harvest:/usr/local/vufind/local/docker/harvest
+      - ./volume/import:/usr/local/vufind/local/docker/import
+      - ./volume/vendor:/usr/local/vufind/vendor
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost/ >/dev/null || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    deploy:
+      resources:
+        limits:
+          memory: ${VUFIND_MEM_LIMIT:-512M}
+          cpus: "${VUFIND_CPU_LIMIT:-0.5}"
+    restart: unless-stopped
+
+  vufind-db:
+    image: mariadb:11.4.5
+    container_name: ${COMPOSE_PROJECT_NAME:-vufind}-db
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    environment:
+      MARIADB_ROOT_PASSWORD: ${VUFIND_DB_ROOT_PASSWORD:-root}
+    ports:
+      - "127.0.0.1:${VUFIND_DB_PORT:-3307}:3306"
+    volumes:
+      - ./volume/db:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+networks:
+  default:
+    name: ${COMPOSE_PROJECT_NAME:-vufind}-network
