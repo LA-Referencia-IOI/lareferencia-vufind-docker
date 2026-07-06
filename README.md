@@ -1,7 +1,7 @@
 # VuFind Docker
 
-Standalone Docker package for running VuFind with MariaDB and an external Solr
-instance. This directory can be used as the root of a new repository.
+Docker package for running VuFind with MariaDB and an external Solr
+instance. 
 
 ## Requirements
 
