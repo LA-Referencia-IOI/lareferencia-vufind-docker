@@ -1,70 +1,70 @@
-# VuFind Docker Standalone
+# VuFind Docker
 
-Pacote Docker independente para subir somente o VuFind com MariaDB e Solr
-externo. Esta pasta pode ser usada como raiz de um novo repositorio.
+Standalone Docker package for running VuFind with MariaDB and an external Solr
+instance. This directory can be used as the root of a new repository.
 
-## Requisitos
+## Requirements
 
 - Docker Engine
 - Docker Compose plugin v2
 - Git
-- Uma instancia Solr ja existente, acessivel pelo container do VuFind
+- An existing Solr instance that is reachable from the VuFind container
 
-## Configuracao
+## Configuration
 
 ```bash
 cp .env.example .env
 ```
 
-Edite `.env` e configure pelo menos:
+Edit `.env` and configure at least:
 
 ```env
-SOLR_EXTERNAL_URL=http://seu-solr:8983/solr
+SOLR_EXTERNAL_URL=http://your-solr:8983/solr
 ```
 
-Se deixar `VUFIND_SITE_URL` vazio, `vufind.sh` calcula
-`http://localhost:${VUFIND_WEB_PORT}`. Preencha essa variavel apenas quando
-for publicar com uma URL externa fixa.
+When `VUFIND_SITE_URL` is empty, `vufind.sh` derives
+`http://localhost:${VUFIND_WEB_PORT}`. Set this variable only when publishing
+VuFind with a fixed external URL.
 
-O modulo local Oasisbr fica habilitado por padrao:
+The local Oasisbr module is enabled by default:
 
 ```env
 VUFIND_LOCAL_MODULES=Oasisbr
 ```
 
-Esse valor e passado para o Apache como `SetEnv VUFIND_LOCAL_MODULES`, para
-que as rotas e configuracoes do modulo sejam carregadas nas requisicoes web.
+This value is passed to Apache as `SetEnv VUFIND_LOCAL_MODULES` so the module
+routes and configuration are loaded by web requests.
 
-Use `VUFIND_SESSION_NAME` para definir um nome de cookie de sessao exclusivo
-para esta instalacao. Isso evita conflito com cookies antigos de outras
-instalacoes VuFind publicadas no mesmo dominio ou caminho.
+Use `VUFIND_SESSION_NAME` to define a unique session cookie name for this
+installation. This avoids conflicts with old cookies from other VuFind
+installations published under the same domain or path.
 
-## Subir
+## Start
 
 ```bash
 ./vufind.sh install
 ```
 
-O script clona `./vufind` automaticamente quando o diretorio ainda nao tem
-um checkout valido do VuFind. Quando o checkout ja existe, `install` atualiza
-o codigo com Git, constroi as imagens e inicia os servicos.
+The script automatically clones `./vufind` when the directory does not already
+contain a valid VuFind checkout. When the checkout already exists, `install`
+updates the code with Git, builds the images, and starts the services.
 
-## Comandos
+## Commands
 
-| Comando | Descricao |
+| Command | Description |
 | --- | --- |
-| `./vufind.sh install` | Faz uma instalacao inicial clonando ou atualizando o VuFind configurado, construindo as imagens e iniciando o ambiente completo. |
-| `./vufind.sh update` | Atualiza o codigo do VuFind com Git, reconstrui as imagens sem cache e recria o ambiente. O comando para se houver alteracoes locais no checkout `./vufind`. |
-| `./vufind.sh rebuild` | Reconstrui as imagens Docker locais mantendo o codigo atual intacto, depois recria o ambiente. |
-| `./vufind.sh restart` | Reinicia os containers existentes sem remover ou recriar containers. |
-| `./vufind.sh start` | Inicia containers existentes. |
-| `./vufind.sh stop` | Para os containers do ambiente sem remover volumes ou dados. |
-| `./vufind.sh logs [args...]` | Exibe logs. Sem argumentos, acompanha os logs do VuFind e do banco. |
-| `./vufind.sh health` | Verifica os endpoints do VuFind e do Solr externo. |
-| `./vufind.sh shell` | Abre um shell no container do VuFind. |
-| `./vufind.sh help` | Exibe a lista de comandos disponiveis e orientacoes de uso. |
+| `./vufind.sh install` | Performs the initial installation by cloning or updating the configured VuFind checkout, building the images, and starting the full environment. |
+| `./vufind.sh update` | Updates the VuFind code with Git, rebuilds images without cache, and recreates the environment. The command stops if local changes exist in the `./vufind` checkout. |
+| `./vufind.sh rebuild` | Rebuilds the local Docker images while keeping the current code intact, then recreates the environment. |
+| `./vufind.sh restart` | Restarts existing containers without removing or recreating them. |
+| `./vufind.sh start` | Starts existing containers. |
+| `./vufind.sh stop` | Stops the environment containers without removing volumes or data. |
+| `./vufind.sh logs [args...]` | Shows logs. With no arguments, follows the VuFind and database logs. |
+| `./vufind.sh health` | Checks the VuFind and external Solr endpoints. |
+| `./vufind.sh shell` | Opens a shell in the VuFind container. |
+| `./vufind.sh help` | Shows the available commands and usage guidance. |
 
-## Estrutura
+## Structure
 
 ```text
 .
@@ -79,6 +79,5 @@ o codigo com Git, constroi as imagens e inicia os servicos.
 └── .gitignore
 ```
 
-Dados persistentes ficam em `volume/` e o codigo do VuFind clonado fica em
-`vufind/`. Ambos estao no `.gitignore`.
-# la-referencia-vufind-docker
+Persistent data is stored in `volume/`, and the cloned VuFind code is stored in
+`vufind/`. Both paths are listed in `.gitignore`.
