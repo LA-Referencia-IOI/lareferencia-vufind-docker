@@ -35,6 +35,10 @@ VUFIND_LOCAL_MODULES=Oasisbr
 Esse valor e passado para o Apache como `SetEnv VUFIND_LOCAL_MODULES`, para
 que as rotas e configuracoes do modulo sejam carregadas nas requisicoes web.
 
+Use `VUFIND_SESSION_NAME` para definir um nome de cookie de sessao exclusivo
+para esta instalacao. Isso evita conflito com cookies antigos de outras
+instalacoes VuFind publicadas no mesmo dominio ou caminho.
+
 ## Subir
 
 ```bash

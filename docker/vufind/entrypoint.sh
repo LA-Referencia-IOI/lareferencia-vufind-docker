@@ -8,6 +8,7 @@ VUFIND_SITE_URL="${VUFIND_SITE_URL:-http://localhost:8080}"
 VUFIND_THEME="${VUFIND_THEME:-bootstrap5}"
 VUFIND_LOCAL_MODULES="${VUFIND_LOCAL_MODULES:-Oasisbr}"
 VUFIND_NOILS_MODE="${VUFIND_NOILS_MODE:-ils-none}"
+VUFIND_SESSION_NAME="${VUFIND_SESSION_NAME:-VUFIND_DOCKER_SESSION}"
 VUFIND_ENV="${VUFIND_ENV:-production}"
 VUFIND_SYSTEM_DEBUG="${VUFIND_SYSTEM_DEBUG:-false}"
 
@@ -147,6 +148,7 @@ cd "${VUFIND_HOME}"
 mkdir -p \
   "${VUFIND_LOCAL_DIR}/cache/cli" \
   "${VUFIND_LOCAL_DIR}/cache/public" \
+  "${VUFIND_LOCAL_DIR}/cache/sessions" \
   "${VUFIND_LOCAL_DIR}/config" \
   "${VUFIND_LOCAL_DIR}/config/vufind" \
   "${VUFIND_LOCAL_DIR}/harvest" \
@@ -185,9 +187,11 @@ set_ini_value "System" "autoConfigure" "false" "${CONFIG_INI}"
 set_ini_value "System" "debug" "$(normalize_bool "${VUFIND_SYSTEM_DEBUG}")" "${CONFIG_INI}"
 set_ini_value "Site" "url" "${VUFIND_SITE_URL}" "${CONFIG_INI}"
 set_ini_value "Site" "theme" "${VUFIND_THEME}" "${CONFIG_INI}"
+set_ini_value "Cookies" "session_name" "${VUFIND_SESSION_NAME}" "${CONFIG_INI}"
 set_ini_value "Catalog" "driver" "NoILS" "${CONFIG_INI}"
 set_ini_value "Index" "url" "${VUFIND_SOLR_URL}" "${CONFIG_INI}"
 set_ini_value "Database" "database" "${DB_DSN}" "${CONFIG_INI}"
+set_ini_value "Session" "file_save_path" "${VUFIND_LOCAL_DIR}/cache/sessions" "${CONFIG_INI}"
 
 NOILS_INI="${VUFIND_LOCAL_DIR}/config/vufind/NoILS.ini"
 if [ ! -f "${NOILS_INI}" ]; then
