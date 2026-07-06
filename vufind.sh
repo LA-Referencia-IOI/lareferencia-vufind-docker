@@ -47,7 +47,39 @@ get_env_var() {
 
   if [ -f "${ENV_FILE}" ]; then
     local found
-    found="$(awk -F= -v k="${key}" '$1 ~ "^[[:space:]]*"k"[[:space:]]*$" {v=$2} END {gsub(/^[[:space:]]+|[[:space:]]+$/, "", v); gsub(/^"|"$/, "", v); print v}' "${ENV_FILE}" || true)"
+    found="$(awk -v k="${key}" '
+      {
+        line = $0
+        sub(/\r$/, "", line)
+        if (NR == 1) {
+          sub(/^\357\273\277/, "", line)
+        }
+        sub(/^[[:space:]]*export[[:space:]]+/, "", line)
+        if (line ~ /^[[:space:]]*(#|$)/) {
+          next
+        }
+
+        eq = index(line, "=")
+        if (eq == 0) {
+          next
+        }
+
+        name = substr(line, 1, eq - 1)
+        gsub(/^[[:space:]]+|[[:space:]]+$/, "", name)
+        if (name != k) {
+          next
+        }
+
+        v = substr(line, eq + 1)
+        gsub(/^[[:space:]]+|[[:space:]]+$/, "", v)
+        if ((v ~ /^".*"$/) || (v ~ /^'\''.*'\''$/)) {
+          v = substr(v, 2, length(v) - 2)
+        }
+      }
+      END {
+        print v
+      }
+    ' "${ENV_FILE}" || true)"
     if [ -n "${found}" ]; then
       value="${found}"
     fi
@@ -78,6 +110,8 @@ external_solr_url() {
 
 require_external_solr() {
   local solr_url
+
+  ensure_env_file
   solr_url="$(external_solr_url)"
 
   if [ -z "${solr_url}" ]; then
