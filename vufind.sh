@@ -21,7 +21,7 @@ Commands:
   start                      Start existing containers
   stop                       Stop containers without removing volumes or data
   logs [args...]             Show logs
-  health                     Check VuFind and external Solr endpoints
+  health                     Check VuFind, MariaDB, and external Solr endpoints
   shell                      Open a shell in the VuFind container
   help                       Show this help
 
@@ -293,6 +293,14 @@ recreate_environment() {
   echo "Solr:    ${SOLR_EXTERNAL_URL}"
 }
 
+check_database_health() {
+  if dc exec -T vufind-db healthcheck.sh --connect --innodb_initialized >/dev/null 2>&1; then
+    echo "MariaDB: vufind-db -> ok"
+  else
+    echo "MariaDB: vufind-db -> failed"
+  fi
+}
+
 cmd="${1:-help}"
 if [ "$#" -gt 0 ]; then
   shift
@@ -357,6 +365,7 @@ case "${cmd}" in
     dc ps
     echo
     curl -fsS -o /dev/null -w "VuFind: ${VUFIND_SITE_URL} -> %{http_code}\n" "${VUFIND_SITE_URL}/" || true
+    check_database_health
     curl -fsS -o /dev/null -w "Solr:    ${SOLR_EXTERNAL_URL} -> %{http_code}\n" "${SOLR_EXTERNAL_URL}/admin/info/system" || true
     ;;
 

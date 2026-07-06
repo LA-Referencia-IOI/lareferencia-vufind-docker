@@ -60,7 +60,7 @@ updates the code with Git, builds the images, and starts the services.
 | `./vufind.sh start` | Starts existing containers. |
 | `./vufind.sh stop` | Stops the environment containers without removing volumes or data. |
 | `./vufind.sh logs [args...]` | Shows logs. With no arguments, follows the VuFind and database logs. |
-| `./vufind.sh health` | Checks the VuFind and external Solr endpoints. |
+| `./vufind.sh health` | Checks the VuFind, MariaDB, and external Solr endpoints. |
 | `./vufind.sh shell` | Opens a shell in the VuFind container. |
 | `./vufind.sh help` | Shows the available commands and usage guidance. |
 
