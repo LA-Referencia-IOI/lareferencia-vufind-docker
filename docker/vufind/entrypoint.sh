@@ -150,8 +150,10 @@ mkdir -p \
   "${VUFIND_LOCAL_DIR}/config" \
   "${VUFIND_LOCAL_DIR}/config/vufind" \
   "${VUFIND_LOCAL_DIR}/harvest" \
+  "${VUFIND_LOCAL_DIR}/logs" \
   "${VUFIND_LOCAL_DIR}/import"
 chmod -R 777 "${VUFIND_LOCAL_DIR}/cache" || true
+chmod -R 777 "${VUFIND_LOCAL_DIR}/logs" || true
 
 configure_apache_env
 configure_php_debug
@@ -176,7 +178,6 @@ fi
 CONFIG_INI="${VUFIND_LOCAL_DIR}/config/vufind/config.ini"
 if [ ! -f "${CONFIG_INI}" ]; then
   cp "${VUFIND_HOME}/config/vufind/config.ini" "${CONFIG_INI}"
-  chmod -R a+rX "${VUFIND_LOCAL_DIR}"
 fi
 
 DB_DSN="mysql://${VUFIND_DB_USER}:${VUFIND_DB_PASSWORD}@${VUFIND_DB_HOST}:${VUFIND_DB_PORT}/${VUFIND_DB_NAME}"
@@ -193,6 +194,8 @@ if [ ! -f "${NOILS_INI}" ]; then
   cp "${VUFIND_HOME}/config/vufind/NoILS.ini" "${NOILS_INI}"
 fi
 sed -E -i "s|^mode[[:space:]]*=.*$|mode = ${VUFIND_NOILS_MODE}|" "${NOILS_INI}"
+
+chmod -R a+rX "${VUFIND_LOCAL_DIR}/config" || true
 
 IMPORT_MAIN="${VUFIND_LOCAL_DIR}/import/import.properties"
 if [ -f "${IMPORT_MAIN}" ]; then
