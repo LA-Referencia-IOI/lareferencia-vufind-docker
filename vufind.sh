@@ -199,6 +199,7 @@ ensure_vufind_checkout() {
 
 ensure_clean_vufind_checkout() {
   local target_dir
+  local changes
 
   target_dir="$(vufind_dir)"
 
@@ -207,8 +208,19 @@ ensure_clean_vufind_checkout() {
     exit 1
   fi
 
-  if [ -n "$(git -C "${target_dir}" status --porcelain)" ]; then
+  changes="$(
+    git -C "${target_dir}" status --porcelain=v1 --untracked-files=all \
+      | awk '
+          substr($0, 1, 2) == "??" && substr($0, 4) ~ /^local\/docker(\/|$)/ {
+            next
+          }
+          { print }
+        '
+  )"
+
+  if [ -n "${changes}" ]; then
     echo "Error: local changes found in ${target_dir}; commit, stash, or remove them before update." >&2
+    printf "%s\n" "${changes}" >&2
     exit 1
   fi
 }
