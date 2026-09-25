@@ -192,6 +192,7 @@ set_ini_value "Catalog" "driver" "NoILS" "${CONFIG_INI}"
 set_ini_value "Index" "url" "${VUFIND_SOLR_URL}" "${CONFIG_INI}"
 set_ini_value "Database" "database" "${DB_DSN}" "${CONFIG_INI}"
 set_ini_value "Session" "file_save_path" "${VUFIND_LOCAL_DIR}/cache/sessions" "${CONFIG_INI}"
+set_ini_value "Logging" "file" "${VUFIND_LOCAL_DIR}/logs/vufind.log:alert,error,notice,debug" "${CONFIG_INI}"
 
 NOILS_INI="${VUFIND_LOCAL_DIR}/config/vufind/NoILS.ini"
 if [ ! -f "${NOILS_INI}" ]; then

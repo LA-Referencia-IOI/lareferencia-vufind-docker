@@ -374,7 +374,7 @@ case "${cmd}" in
 
   log)
     ensure_docker_installed
-    dc exec vufind-web tail -f /var/log/vufind.log
+    dc exec vufind-web tail -f /usr/local/vufind/local/docker/logs/vufind.log
     ;;
 
   health)
