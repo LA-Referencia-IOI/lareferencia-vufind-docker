@@ -21,6 +21,7 @@ Commands:
   start                      Start existing containers
   stop                       Stop containers without removing volumes or data
   logs [args...]             Show logs
+  log                        Follow the VuFind application log
   health                     Check VuFind, MariaDB, and external Solr endpoints
   shell                      Open a shell in the VuFind container
   help                       Show this help
@@ -369,6 +370,11 @@ case "${cmd}" in
     else
       dc logs "$@"
     fi
+    ;;
+
+  log)
+    ensure_docker_installed
+    dc exec vufind-web tail -f /var/log/vufind.log
     ;;
 
   health)
