@@ -239,4 +239,8 @@ fi
 
 wait_for_solr
 
+VUFIND_WEB_PORT="${VUFIND_WEB_PORT:-8080}"
+sed -i -E "s/^Listen [0-9]+$/Listen ${VUFIND_WEB_PORT}/" /etc/apache2/ports.conf
+sed -i -E "s/<VirtualHost \*:[0-9]+>/<VirtualHost *:${VUFIND_WEB_PORT}>/" /etc/apache2/sites-available/000-default.conf
+
 exec "$@"
