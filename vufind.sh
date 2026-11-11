@@ -20,14 +20,15 @@ Commands:
   restart                    Restart existing containers
   start                      Start existing containers
   stop                       Stop containers without removing volumes or data
+  up                         Create containers if needed, and start them
+  down                       Stop and remove containers without removing volumes or data
+  cleanup                    Stop containers and remove containers and volumes, delete vufind - This removes all data !
   logs [args...]             Show logs
   log                        Follow the VuFind application log
   health                     Check VuFind, MariaDB, and external Solr endpoints
   shell                      Open a shell in the VuFind container
+  index-alpha                Rebuild the index for alphabetical browse
   help                       Show this help
-
-Required in .env:
-  SOLR_EXTERNAL_URL=http://your-solr:8983/solr
 USAGE
 }
 
@@ -109,18 +110,25 @@ external_solr_url() {
   printf "%s\n" "${SOLR_EXTERNAL_URL:-$(get_env_var SOLR_EXTERNAL_URL "")}"
 }
 
-require_external_solr() {
-  local solr_url
+setup_solr_urls() {
+  local solr_host_url
+  local solr_external_url
+  local dc_profile
 
   ensure_env_file
-  solr_url="$(external_solr_url)"
+  solr_external_url="$(external_solr_url)"
 
-  if [ -z "${solr_url}" ]; then
-    echo "Error: SOLR_EXTERNAL_URL is required. Set it in ${ENV_FILE}." >&2
-    exit 1
+  if [ -z "${solr_external_url}" ]; then
+    solr_host_url="http://localhost:8983/solr"
+    dc_profile="with_solr"
+  else
+    solr_host_url=="${solr_external_url}"
+    dc_profile="without_solr"
   fi
 
-  export SOLR_EXTERNAL_URL="${solr_url}"
+  export SOLR_EXTERNAL_URL="${solr_external_url}"
+  export SOLR_HOST_URL="${solr_host_url}"
+  export DC_PROFILE="${dc_profile}"
 }
 
 export_runtime_env() {
@@ -148,7 +156,7 @@ export_runtime_env() {
 
 dc() {
   export_runtime_env
-  docker compose --env-file "${ENV_FILE}" -f "${COMPOSE_FILE}" "$@"
+  docker compose --profile "${DC_PROFILE}" --env-file "${ENV_FILE}" -f "${COMPOSE_FILE}" "$@"
 }
 
 dir_has_content() {
@@ -295,15 +303,15 @@ build_vufind_image() {
 }
 
 start_environment() {
-  dc up -d vufind-db vufind-web
+  dc up -d
   echo "VuFind: ${VUFIND_SITE_URL}"
-  echo "Solr:    ${SOLR_EXTERNAL_URL}"
+  echo "Solr:   ${SOLR_HOST_URL}"
 }
 
 recreate_environment() {
-  dc up -d --force-recreate vufind-db vufind-web
+  dc up -d --force-recreate
   echo "VuFind: ${VUFIND_SITE_URL}"
-  echo "Solr:    ${SOLR_EXTERNAL_URL}"
+  echo "Solr:   ${SOLR_HOST_URL}"
 }
 
 check_database_health() {
@@ -314,10 +322,40 @@ check_database_health() {
   fi
 }
 
+prepare_solr_if_needed() {
+  if [[ -z "$SOLR_EXTERNAL_URL" ]]; then
+    cd vufind
+    composer install
+    cd ..
+  fi
+}
+
+cleanup() {
+  read -p "This will remove all data. Are you sure? " -n 1 -r
+  echo
+  if [[ $REPLY =~ ^[Yy]$ ]]
+  then
+    ensure_docker_installed
+    echo "Removing containers..."
+    dc down
+    echo "Removing named volumes..."
+    docker volume rm -f vufind_vufind_db vufind_vufind_solr
+    echo "Removing volume and vufind directories (requires root access)..."
+    sudo rm -r ./volume ./vufind
+    echo "Done."
+  fi
+}
+
+index_alpha() {
+  docker exec vufind-solr /alphabrowse/index-alphabetic-browse.sh
+}
+
 cmd="${1:-help}"
 if [ "$#" -gt 0 ]; then
   shift
 fi
+
+setup_solr_urls
 
 case "${cmd}" in
   help|-h|--help)
@@ -326,47 +364,61 @@ case "${cmd}" in
 
   install)
     ensure_docker_installed
-    require_external_solr
     update_vufind_checkout
+    prepare_solr_if_needed
     build_vufind_image false
     start_environment
     ;;
 
   update)
     ensure_docker_installed
-    require_external_solr
     update_vufind_checkout
+    prepare_solr_if_needed
     build_vufind_image true
     recreate_environment
     ;;
 
   rebuild)
     ensure_docker_installed
-    require_external_solr
     ensure_vufind_checkout
+    prepare_solr_if_needed
     build_vufind_image false
     recreate_environment
     ;;
 
   restart)
     ensure_docker_installed
-    dc restart vufind-db vufind-web
+    dc restart
     ;;
 
   start)
     ensure_docker_installed
-    dc start vufind-db vufind-web
+    dc start
     ;;
 
   stop)
     ensure_docker_installed
-    dc stop vufind-web vufind-db
+    dc stop
+    ;;
+
+  up)
+    ensure_docker_installed
+    start_environment
+    ;;
+
+  down)
+    ensure_docker_installed
+    dc down
+    ;;
+
+  cleanup)
+    cleanup
     ;;
 
   logs)
     ensure_docker_installed
     if [ "$#" -eq 0 ]; then
-      dc logs -f vufind-web vufind-db
+      dc logs -f
     else
       dc logs "$@"
     fi
@@ -379,17 +431,20 @@ case "${cmd}" in
 
   health)
     ensure_docker_installed
-    require_external_solr
     dc ps
     echo
     curl -fsS -o /dev/null -w "VuFind: ${VUFIND_SITE_URL} -> %{http_code}\n" "${VUFIND_SITE_URL}/" || true
     check_database_health
-    curl -fsS -o /dev/null -w "Solr:    ${SOLR_EXTERNAL_URL} -> %{http_code}\n" "${SOLR_EXTERNAL_URL}/admin/info/system" || true
+    curl -fsS -o /dev/null -w "Solr:   ${SOLR_HOST_URL} -> %{http_code}\n" "${SOLR_HOST_URL}/admin/info/system" || true
     ;;
 
   shell)
     ensure_docker_installed
     dc exec vufind-web bash
+    ;;
+
+  index-alpha)
+    index_alpha
     ;;
 
   *)

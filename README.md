@@ -8,7 +8,6 @@ instance.
 - Docker Engine
 - Docker Compose plugin v2
 - Git
-- An existing Solr instance that is reachable from the VuFind container
 
 ## Configuration
 
@@ -16,17 +15,18 @@ instance.
 cp .env.example .env
 ```
 
-Edit `.env` and configure at least:
+Edit `.env`. If you are using an external Solr, configure at least:
 
 ```env
 SOLR_EXTERNAL_URL=http://your-solr:8983/solr
 ```
+Otherwise, Solr is started in a container.
 
 When `VUFIND_SITE_URL` is empty, `vufind.sh` derives
 `http://localhost:${VUFIND_WEB_PORT}`. Set this variable only when publishing
 VuFind with a fixed external URL.
 
-The local Oasisbr module is enabled by default:
+Optionally add the Oasisbr module:
 
 ```env
 VUFIND_LOCAL_MODULES=Oasisbr
@@ -49,6 +49,13 @@ The script automatically clones `./vufind` when the directory does not already
 contain a valid VuFind checkout. When the checkout already exists, `install`
 updates the code with Git, builds the images, and starts the services.
 
+## Import a MARC file
+
+```bash
+sudo cp ./test.xml volume/import/
+docker exec vufind-web ./import-marc.sh local/docker/import/test.xml
+```
+
 ## Commands
 
 | Command | Description |
@@ -58,11 +65,15 @@ updates the code with Git, builds the images, and starts the services.
 | `./vufind.sh rebuild` | Rebuilds the local Docker images while keeping the current code intact, then recreates the environment. |
 | `./vufind.sh restart` | Restarts existing containers without removing or recreating them. |
 | `./vufind.sh start` | Starts existing containers. |
-| `./vufind.sh stop` | Stops the environment containers without removing volumes or data. |
+| `./vufind.sh stop` | Stop the environment containers without removing volumes or data. |
+| `./vufind.sh up` | Create containers if needed, and start them. |
+| `./vufind.sh down` | Stop and remove containers without removing volumes or data. |
+| `./vufind.sh cleanup` | Stop containers and remove containers and volumes, delete vufind - This removes all data ! |
 | `./vufind.sh logs [args...]` | Shows logs. With no arguments, follows the VuFind and database logs. |
 | `./vufind.sh log` | Follows VuFind's application log (`/usr/local/vufind/local/docker/logs/vufind.log`) in the web container. |
 | `./vufind.sh health` | Checks the VuFind, MariaDB, and external Solr endpoints. |
 | `./vufind.sh shell` | Opens a shell in the VuFind container. |
+| `./vufind.sh index-alpha` | Rebuild the index for alphabetical browse. |
 | `./vufind.sh help` | Shows the available commands and usage guidance. |
 
 ## Swagger UI
