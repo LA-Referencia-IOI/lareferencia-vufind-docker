@@ -6,7 +6,7 @@ ENV SOLR_JAR_PATH=/opt/solr
 
 USER root
 
-RUN mkdir /configsets && \
+RUN mkdir -p /configsets/biblio/lib && \
     mkdir -p /alphabrowse/import/lib && \
     mkdir -p /var/solr/data
 
@@ -18,8 +18,6 @@ COPY ./vufind/solr/vufind/authority /configsets/authority
 COPY ./vufind/solr/vufind/biblio /configsets/biblio
 COPY ./vufind/solr/vufind/reserves /configsets/reserves
 COPY ./vufind/solr/vufind/website /configsets/website
-
-RUN mkdir -p /configsets/biblio/lib
 
 # Copy biblio libraries (<lib> cannot be used with Solr 10)
 COPY ./vufind/import/lib/marc4j*.jar ./vufind/import/solrmarc_core*.jar ./vufind/solr/vufind/jars/*.jar ./vufind/solr/vendor/modules/analysis-extras/lib/*.jar /configsets/biblio/lib/
