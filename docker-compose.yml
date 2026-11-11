@@ -10,8 +10,6 @@ services:
     depends_on:
       vufind-db:
         condition: service_healthy
-      vufind-solr:
-        condition: service_healthy
     environment:
       VUFIND_HOME: /usr/local/vufind
       VUFIND_LOCAL_DIR: /usr/local/vufind/local/docker
