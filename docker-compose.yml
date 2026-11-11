@@ -101,6 +101,7 @@ services:
         limits:
           memory: ${SOLR_MEM_LIMIT:-512M}
           cpus: ${SOLR_CPU_LIMIT:-1}
+    restart: unless-stopped
 
 networks:
   default:

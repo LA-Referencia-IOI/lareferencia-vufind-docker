@@ -122,7 +122,7 @@ setup_solr_urls() {
     solr_host_url="http://localhost:8983/solr"
     dc_profile="with_solr"
   else
-    solr_host_url=="${solr_external_url}"
+    solr_host_url="${solr_external_url}"
     dc_profile="without_solr"
   fi
 
@@ -336,10 +336,8 @@ cleanup() {
   if [[ $REPLY =~ ^[Yy]$ ]]
   then
     ensure_docker_installed
-    echo "Removing containers..."
-    dc down
-    echo "Removing named volumes..."
-    docker volume rm -f vufind_vufind_db vufind_vufind_solr
+    echo "Removing containers and named volumes..."
+    dc down --volumes
     echo "Removing volume and vufind directories (requires root access)..."
     sudo rm -r ./volume ./vufind
     echo "Done."
@@ -347,7 +345,7 @@ cleanup() {
 }
 
 index_alpha() {
-  docker exec vufind-solr /alphabrowse/index-alphabetic-browse.sh
+  dc exec vufind-solr /alphabrowse/index-alphabetic-browse.sh
 }
 
 cmd="${1:-help}"

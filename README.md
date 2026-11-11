@@ -8,6 +8,7 @@ instance.
 - Docker Engine
 - Docker Compose plugin v2
 - Git
+- To run Solr in a container: PHP and Composer
 
 ## Configuration
 
