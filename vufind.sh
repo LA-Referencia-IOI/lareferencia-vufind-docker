@@ -324,9 +324,9 @@ check_database_health() {
 
 prepare_solr_if_needed() {
   if [[ -z "$SOLR_EXTERNAL_URL" ]]; then
-    cd vufind
+    cd "${SCRIPT_DIR}/vufind"
     composer install
-    cd ..
+    cd -
   fi
 }
 
@@ -339,7 +339,7 @@ cleanup() {
     echo "Removing containers and named volumes..."
     dc down --volumes
     echo "Removing volume and vufind directories (requires root access)..."
-    sudo rm -r ./volume ./vufind
+    sudo rm -r "${SCRIPT_DIR}/volume" "${SCRIPT_DIR}/vufind"
     echo "Done."
   fi
 }
