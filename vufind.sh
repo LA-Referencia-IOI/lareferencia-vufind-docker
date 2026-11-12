@@ -114,12 +114,14 @@ setup_solr_urls() {
   local solr_host_url
   local solr_external_url
   local dc_profile
+  local solr_host_port
 
   ensure_env_file
   solr_external_url="$(external_solr_url)"
 
   if [ -z "${solr_external_url}" ]; then
-    solr_host_url="http://localhost:8983/solr"
+    solr_host_port="${SOLR_HOST_PORT:-$(get_env_var SOLR_HOST_PORT "8983")}"
+    solr_host_url="http://localhost:${solr_host_port}/solr"
     dc_profile="with_solr"
   else
     solr_host_url="${solr_external_url}"
