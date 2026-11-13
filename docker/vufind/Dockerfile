@@ -1,4 +1,4 @@
-FROM php:8.3-apache-bullseye
+FROM php:8.3-apache-trixie
 
 ENV DEBIAN_FRONTEND=noninteractive
 
@@ -18,6 +18,8 @@ RUN apt-get update \
         libxslt1-dev \
         libzip-dev \
         unzip \
+# Java is needed to run import-marc.sh
+        openjdk-21-jre-headless \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-configure ldap --with-libdir="lib/$(dpkg-architecture -qDEB_HOST_MULTIARCH)/" \
     && docker-php-ext-install -j"$(nproc)" \

@@ -1,6 +1,5 @@
 .git
 .env
 .DS_Store
-/vufind
 /volume
 *.log

@@ -1,5 +1,8 @@
 services:
   vufind-web:
+    profiles:
+      - with_solr
+      - without_solr
     build:
       context: .
       dockerfile: docker/vufind/Dockerfile
@@ -14,7 +17,7 @@ services:
       VUFIND_WEB_PORT: ${VUFIND_WEB_PORT:-8080}
       VUFIND_SITE_URL: ${VUFIND_SITE_URL:-http://localhost:8080}
       VUFIND_THEME: ${VUFIND_THEME:-bootstrap5}
-      VUFIND_LOCAL_MODULES: ${VUFIND_LOCAL_MODULES:-Oasisbr}
+      VUFIND_LOCAL_MODULES: ${VUFIND_LOCAL_MODULES:-}
       VUFIND_NOILS_MODE: ${VUFIND_NOILS_MODE:-ils-none}
       VUFIND_SESSION_NAME: ${VUFIND_SESSION_NAME:-VUFIND_DOCKER_SESSION}
       VUFIND_ENV: ${VUFIND_ENV:-production}
@@ -30,7 +33,7 @@ services:
       VUFIND_DB_PASSWORD: ${VUFIND_DB_PASSWORD:-vufind}
       VUFIND_DB_ROOT_USER: root
       VUFIND_DB_ROOT_PASSWORD: ${VUFIND_DB_ROOT_PASSWORD:-root}
-      VUFIND_SOLR_URL: ${SOLR_EXTERNAL_URL:-}
+      VUFIND_SOLR_URL: ${SOLR_EXTERNAL_URL:-http://vufind-solr:8983/solr}
     ports:
       - "${VUFIND_WEB_PORT:-8080}:${VUFIND_WEB_PORT:-8080}"
     volumes:
@@ -55,7 +58,10 @@ services:
     restart: unless-stopped
 
   vufind-db:
-    image: mariadb:11.4.5
+    profiles:
+      - with_solr
+      - without_solr
+    image: mariadb:11.4
     container_name: ${COMPOSE_PROJECT_NAME:-vufind}-db
     command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci --port=${VUFIND_DB_PORT:-3307}
     environment:
@@ -63,7 +69,7 @@ services:
     ports:
       - "127.0.0.1:${VUFIND_DB_PORT:-3307}:${VUFIND_DB_PORT:-3307}"
     volumes:
-      - ./volume/db:/var/lib/mysql
+      - vufind_db:/var/lib/mysql
     healthcheck:
       test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
       interval: 10s
@@ -71,6 +77,34 @@ services:
       retries: 5
     restart: unless-stopped
 
+  vufind-solr:
+    profiles:
+      - with_solr
+    build:
+      context: .
+      dockerfile: docker/solr/Dockerfile
+    container_name: ${COMPOSE_PROJECT_NAME:-vufind}-solr
+    ports:
+      - "${SOLR_HOST_PORT:-8983}:8983"
+    volumes:
+      - vufind_solr:/var/solr
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8983/api/node/health || exit 1"]
+      interval: 1m
+      timeout: 10s
+      retries: 1
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          memory: ${SOLR_MEM_LIMIT:-512M}
+          cpus: ${SOLR_CPU_LIMIT:-1}
+    restart: unless-stopped
+
 networks:
   default:
     name: ${COMPOSE_PROJECT_NAME:-vufind}-network
+
+volumes:
+  vufind_db:
+  vufind_solr:
